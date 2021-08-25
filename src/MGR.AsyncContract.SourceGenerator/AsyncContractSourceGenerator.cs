@@ -8,6 +8,8 @@ namespace MGR.AsyncContract.SourceGenerator
         public void Execute(GeneratorExecutionContext context)
         { }
         public void Initialize(GeneratorInitializationContext context)
-        { }
+        {
+            context.RegisterForSyntaxNotifications(() => new ServiceContractSyntaxReceiver());
+        }
     }
 }
