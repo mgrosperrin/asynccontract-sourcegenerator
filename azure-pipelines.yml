@@ -1,0 +1,46 @@
+name: MGR.AsyncContract.SourceGenerator - $(Date:yyyyMMdd)$(rev:.r)
+
+variables:
+- name: DOTNET_SKIP_FIRST_TIME_EXPERIENCE
+  value: 1
+- name: System.Configuration
+  value: Release
+
+stages:
+- stage: Build
+  displayName: 'Build the library'
+  jobs:
+  - job: BuildLibrary
+    displayName: Build the library
+    pool:
+      name: Azure Pipelines
+      vmImage: windows-2019
+    steps:
+    - task: UseDotNet@2
+      displayName: 'Install the .NET Core SDK'
+      inputs:
+        packageType: 'sdk'
+        version: '5.0.x'
+    - task: DotNetCoreCLI@2
+      displayName: 'Build & Pack the libraries'
+      inputs:
+        arguments: '-c $(System.Configuration)'
+    - task: DotNetCoreCLI@2
+      displayName: 'Test the libraries'
+      inputs:
+        command: test
+        projects: 'tests/**Tests/*.csproj'
+        arguments: '-c $(System.Configuration) --no-build --collect:"XPlat Code Coverage" --settings build/coverlet.runsettings'
+    - task: Palmmedia.reportgenerator.reportgenerator-build-release-task.reportgenerator@4
+      displayName: 'Generate code coverage report'
+      inputs:
+        reports: '$(Agent.TempDirectory)/**/coverage.cobertura.xml'
+        targetdir: '$(Build.ArtifactStagingDirectory)/Coverage'
+      condition: succeededOrFailed()
+    - task: PublishCodeCoverageResults@1
+      displayName: 'Publish code coverage from $(Build.ArtifactStagingDirectory)/Coverage/Cobertura.xml'
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(Build.ArtifactStagingDirectory)/Coverage/Cobertura.xml'
+        reportDirectory: '$(Build.ArtifactStagingDirectory)/Coverage'
+      condition: succeededOrFailed()
