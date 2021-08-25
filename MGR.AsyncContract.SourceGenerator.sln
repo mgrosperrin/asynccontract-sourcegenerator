@@ -21,6 +21,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{AA6E011E-7202-44F1-BA38-9DA6C7B5F4EE}"
 	ProjectSection(SolutionItems) = preProject
 		azure-pipelines.yml = azure-pipelines.yml
+		coverlet.runsettings = coverlet.runsettings
 	EndProjectSection
 EndProject
 Global
