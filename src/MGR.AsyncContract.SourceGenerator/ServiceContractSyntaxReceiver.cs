@@ -7,7 +7,7 @@ namespace MGR.AsyncContract.SourceGenerator
 {
     internal class ServiceContractSyntaxReceiver : ISyntaxReceiver
     {
-        public List<(SyntaxNode Origin, InterfaceDeclarationSyntax Declaration)> Targets { get; } = new();
+        public List<InterfaceDeclarationSyntax> Targets { get; } = new();
 
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
@@ -16,15 +16,9 @@ namespace MGR.AsyncContract.SourceGenerator
                 if (interfaceDeclarationSyntax.AttributeLists.Count > 0
                     && interfaceDeclarationSyntax.AttributeLists
                         .SelectMany(attrList => attrList.Attributes)
-                        .Select(attr => attr.Name.ToString())
-                        .Any(attrName =>
-                            attrName == Constants.ServiceContract
-                            || attrName == Constants.FullyQualifiedServiceContract
-                            || attrName == Constants.FullyQualifiedServiceContractAttribute
-                            || attrName == Constants.ServiceContractAttribute
-                            ))
+                        .Any(attr => attr.IsServiceContract()))
                 {
-                    Targets.Add((syntaxNode, interfaceDeclarationSyntax));
+                    Targets.Add(interfaceDeclarationSyntax);
                 }
             }
         }
