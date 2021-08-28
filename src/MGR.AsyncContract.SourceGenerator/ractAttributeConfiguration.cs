@@ -1,12 +1,12 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Collections.Immutable;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace MGR.AsyncContract.SourceGenerator
 {
     internal class ServiceContractAttributeConfiguration
     {
-        public string ServiceName { get; }
-        public string Namespace { get; }
-        public string SessionMode { get; }
+        public ImmutableArray<AttributeArgumentSyntax> Arguments { get; }
 
         public ServiceContractAttributeConfiguration(AttributeData serviceContractAttributeData)
         {

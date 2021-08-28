@@ -9,9 +9,10 @@ namespace MGR.AsyncContract.SourceGenerator
     internal class ServiceContractConfiguration
     {
         public ImmutableArray<Diagnostic> Diagnostics { get; }
+        public AttributesGenerator AttributesGenerator { get; }
         public ServiceContractAttributeConfiguration ServiceContractAttribute { get; }
 
-        public ImmutableArray<AttributeConfiguration> OthersAttributes { get; }
+        public ImmutableArray<AttributesGenerator> OthersAttributes { get; }
         public InterfaceConfiguration Interface { get; }
         public ServiceContractConfiguration(InterfaceDeclarationSyntax interfaceDeclarationSyntax, Compilation compilation, INamedTypeSymbol serviceContractAttributeSymbol)
         {
@@ -23,7 +24,6 @@ namespace MGR.AsyncContract.SourceGenerator
                 throw new ArgumentException();
             }
             var allAttributes = source.GetAttributes();
-
             var serviceContractAttribute = allAttributes.SingleOrDefault(
                 x => x.AttributeClass!.Equals(serviceContractAttributeSymbol, SymbolEqualityComparer.Default));
 
@@ -32,8 +32,11 @@ namespace MGR.AsyncContract.SourceGenerator
                 throw new ArgumentException();
             }
 
+            AttributesGenerator = new AttributesGenerator(allAttributes);
+
+
             ServiceContractAttribute = new ServiceContractAttributeConfiguration(serviceContractAttribute);
-            OthersAttributes = ImmutableArray.Create<AttributeConfiguration>();
+            OthersAttributes = ImmutableArray.Create<AttributesGenerator>();
             Interface = new InterfaceConfiguration();
         }
     }

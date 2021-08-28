@@ -18,7 +18,7 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
             var code = @"
 using System.ServiceModel;
 
-[ServiceContract]
+[ServiceContract(Name = ""Test""), GeneratedCode(""RR"")]
 public interface ITestService {}";
             var sourceSyntaxTree = CSharpSyntaxTree.ParseText(code);
             var references = AppDomain.CurrentDomain.GetAssemblies()
@@ -39,6 +39,10 @@ public interface ITestService {}";
                 receiver.OnVisitSyntaxNode(node);
             }
 
+            var serviceContractNamedSymbol =
+                compilation.GetTypeByMetadataName(Constants.FullyQualifiedServiceContractAttribute);
+            var configuration =
+                new ServiceContractConfiguration(receiver.Targets.First(), compilation, serviceContractNamedSymbol);
             //var information = new ServiceContractConfiguration(null, compilation, null);
             //    StronglyTypedIdInformation.Create(receiver, compilation);
             //var information = GetInformation(code);
