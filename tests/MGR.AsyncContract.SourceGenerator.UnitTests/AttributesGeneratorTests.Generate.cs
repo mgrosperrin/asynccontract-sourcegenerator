@@ -30,29 +30,36 @@ public interface ITestService {}";
                     MetadataReference.CreateFromFile(typeof(GeneratedCodeAttribute).Assembly.Location)});
 
                 var compilation = CSharpCompilation.Create(
-                    "generator",
-                    new[] { sourceSyntaxTree },
-                    references,
-                    new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+                                "generator",
+                                new[] { sourceSyntaxTree },
+                                references,
+                                new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+                var generatedCodeAttributeSymbol = compilation.GetTypeByMetadataName(typeof(GeneratedCodeAttribute).FullName)!;
+                var serviceContractAttributeSymbol = compilation.GetTypeByMetadataName(Constants.FullyQualifiedServiceContractAttribute)!;
 
                 var receiver = new ServiceContractSyntaxReceiver();
-
                 foreach (var node in sourceSyntaxTree.GetRoot().DescendantNodes(descendIntoChildren: _ => true))
                 {
                     receiver.OnVisitSyntaxNode(node);
                 }
 
-                var serviceContractNamedSymbol =
-                    compilation.GetTypeByMetadataName(Constants.FullyQualifiedServiceContractAttribute);
-                Assert.NotNull(serviceContractNamedSymbol);
-                var configuration =
-                    new ServiceContractConfiguration(receiver.Targets.First(), compilation, serviceContractNamedSymbol);
-                var attributesGenerator = configuration.AttributesGenerator;
+                Assert.NotNull(serviceContractAttributeSymbol);
+                var interfaceDeclarationSyntax = receiver.Targets.First();
+                var model = compilation.GetSemanticModel(interfaceDeclarationSyntax.SyntaxTree);
+                var source = ModelExtensions.GetDeclaredSymbol(model, interfaceDeclarationSyntax);
 
-                var actual = attributesGenerator.Generate();
+                if (source is not ITypeSymbol interfaceSymbol)
+                {
+                    throw new ArgumentException();
+                }
+                var allAttributes = source.GetAttributes();
+                var attributesGenerator = new AttributesGenerator(compilation, generatedCodeAttributeSymbol);
+
+                var actual = attributesGenerator.Generate(allAttributes);
                 Assert.Equal(@"[System.ServiceModel.ServiceContractAttribute(Name = ""Test"")]
 [System.CodeDom.Compiler.GeneratedCodeAttribute(""RR"", ""0"")]
-", actual);
+", actual.SourceCode);
             }
         }
     }

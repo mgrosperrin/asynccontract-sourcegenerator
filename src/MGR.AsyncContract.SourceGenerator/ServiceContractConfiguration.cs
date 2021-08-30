@@ -9,7 +9,6 @@ namespace MGR.AsyncContract.SourceGenerator
     internal class ServiceContractConfiguration
     {
         public ImmutableArray<Diagnostic> Diagnostics { get; }
-        public AttributesGenerator AttributesGenerator { get; }
         public ServiceContractAttributeConfiguration ServiceContractAttribute { get; }
 
         public ImmutableArray<AttributesGenerator> OthersAttributes { get; }
@@ -31,9 +30,6 @@ namespace MGR.AsyncContract.SourceGenerator
             {
                 throw new ArgumentException();
             }
-
-            AttributesGenerator = new AttributesGenerator(allAttributes);
-
 
             ServiceContractAttribute = new ServiceContractAttributeConfiguration(serviceContractAttribute);
             OthersAttributes = ImmutableArray.Create<AttributesGenerator>();
