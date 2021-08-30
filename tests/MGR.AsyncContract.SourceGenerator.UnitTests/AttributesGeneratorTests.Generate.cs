@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using System;
 using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 namespace MGR.AsyncContract.SourceGenerator.UnitTests
@@ -15,7 +12,7 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
         public class Generate
         {
             [Fact]
-            public void CreateForStruct()
+            public void Generate_For_Multiple_Attributes()
             {
                 var code = @"
 using System.ServiceModel;
@@ -46,7 +43,7 @@ public interface ITestService {}";
                     compilation.GetTypeByMetadataName(Constants.FullyQualifiedServiceContractAttribute);
                 Assert.NotNull(serviceContractNamedSymbol);
                 var configuration =
-                    new ServiceContractConfiguration(receiver.Targets.First(), compilation, serviceContractNamedSymbol);
+                    new ServiceContractGenerator(receiver.Targets.First(), compilation, serviceContractNamedSymbol);
                 var attributesGenerator = configuration.AttributesGenerator;
 
                 var actual = attributesGenerator.Generate();

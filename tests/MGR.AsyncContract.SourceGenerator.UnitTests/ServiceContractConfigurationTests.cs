@@ -1,11 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.ServiceModel;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace MGR.AsyncContract.SourceGenerator.UnitTests
@@ -42,7 +39,7 @@ public interface ITestService {}";
             var serviceContractNamedSymbol =
                 compilation.GetTypeByMetadataName(Constants.FullyQualifiedServiceContractAttribute);
             var configuration =
-                new ServiceContractConfiguration(receiver.Targets.First(), compilation, serviceContractNamedSymbol);
+                new ServiceContractGenerator(receiver.Targets.First(), compilation, serviceContractNamedSymbol);
             //var information = new ServiceContractConfiguration(null, compilation, null);
             //    StronglyTypedIdInformation.Create(receiver, compilation);
             //var information = GetInformation(code);
