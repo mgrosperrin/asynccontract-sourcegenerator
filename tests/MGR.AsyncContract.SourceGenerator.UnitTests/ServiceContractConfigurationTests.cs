@@ -39,7 +39,7 @@ public interface ITestService {}";
             var serviceContractNamedSymbol =
                 compilation.GetTypeByMetadataName(Constants.FullyQualifiedServiceContractAttribute);
             var configuration =
-                new ServiceContractGenerator(receiver.Targets.First(), compilation, serviceContractNamedSymbol);
+                new ServiceContractConfiguration(receiver.Targets.First(), compilation, serviceContractNamedSymbol);
             //var information = new ServiceContractConfiguration(null, compilation, null);
             //    StronglyTypedIdInformation.Create(receiver, compilation);
             //var information = GetInformation(code);
