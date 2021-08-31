@@ -13,11 +13,55 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
         {
             [Theory]
             [MemberData(nameof(Data.FindAttributedServiceContracts), MemberType = typeof(Data))]
+            public void Should_Return_Namespaced_Interface_Name_With_Async(string interfaceCode)
+            {
+                var expected = @"namespace Test
+{
+    public interface IServiceAsync
+    {
+    }
+}
+";
+                var interfaceCodeWithNamespace = $@"namespace Test
+{{
+    {interfaceCode}
+}}
+";
+                var sourceSyntaxTree = CSharpSyntaxTree.ParseText(interfaceCodeWithNamespace);
+                var references = AppDomain.CurrentDomain.GetAssemblies()
+                    .Where(_ => !_.IsDynamic && !string.IsNullOrWhiteSpace(_.Location))
+                    .Select(_ => MetadataReference.CreateFromFile(_.Location))
+                    .Concat(new[] { MetadataReference.CreateFromFile(typeof(ServiceContractAttribute).Assembly.Location) });
+
+                var compilation = CSharpCompilation.Create(
+                    "generator",
+                    new[] { sourceSyntaxTree },
+                    references,
+                    new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+                var sut = new InterfaceGenerator(compilation);
+                var receiver = new ServiceContractSyntaxReceiver();
+
+                foreach (var node in sourceSyntaxTree.GetRoot().DescendantNodes(descendIntoChildren: _ => true))
+                {
+                    receiver.OnVisitSyntaxNode(node);
+                }
+                var interfaceDeclaration = receiver.Targets.First();
+
+                var actual = sut.Generate(interfaceDeclaration);
+
+                Assert.NotNull(actual);
+                Assert.Equal("IServiceAsync.g.cs", actual.TargetName);
+                Assert.Equal(expected, actual.SourceCode);
+            }
+            [Theory]
+            [MemberData(nameof(Data.FindAttributedServiceContracts), MemberType = typeof(Data))]
             public void Should_Return_Interface_Name_With_Async(string interfaceCode)
             {
                 var expected = @"public interface IServiceAsync
 {
-}";
+}
+";
                 var sourceSyntaxTree = CSharpSyntaxTree.ParseText(interfaceCode);
                 var references = AppDomain.CurrentDomain.GetAssemblies()
                     .Where(_ => !_.IsDynamic && !string.IsNullOrWhiteSpace(_.Location))
