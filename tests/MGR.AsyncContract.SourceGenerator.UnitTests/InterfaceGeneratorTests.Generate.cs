@@ -1,6 +1,8 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.CodeDom.Compiler;
 using System.Linq;
 using System.ServiceModel;
 using Xunit;
@@ -12,14 +14,17 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
         public class Generate
         {
             [Theory]
-            [MemberData(nameof(Data.FindAttributedServiceContracts), MemberType = typeof(Data))]
-            public void Should_Return_Namespaced_Interface_Name_With_Async(string interfaceCode)
+            [GeneratedCode("", "")]
+            [MemberData(nameof(Data.FindAttributedServiceContractsWithName), MemberType = typeof(Data))]
+            [MemberData(nameof(Data.FindAttributedServiceContractsWithoutName), MemberType = typeof(Data))]
+            [MemberData(nameof(Data.FindAttributedServiceContractsWithNameAndSessionMode), MemberType = typeof(Data))]
+            public void Should_Return_Namespaced_Interface_Name_With_Async(string interfaceCode, string orginalExpected)
             {
                 var expected = @"namespace Test
 {
-    public interface IServiceAsync
-    {
-    }
+    "
+    + string.Join(Environment.NewLine + @"    ", orginalExpected.Split(new string[] { Environment.NewLine }, StringSplitOptions.RemoveEmptyEntries))
+    + @"
 }
 ";
                 var interfaceCodeWithNamespace = $@"namespace Test
@@ -27,42 +32,44 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
     {interfaceCode}
 }}
 ";
-                var sourceSyntaxTree = CSharpSyntaxTree.ParseText(interfaceCodeWithNamespace);
-                var references = AppDomain.CurrentDomain.GetAssemblies()
-                    .Where(_ => !_.IsDynamic && !string.IsNullOrWhiteSpace(_.Location))
-                    .Select(_ => MetadataReference.CreateFromFile(_.Location))
-                    .Concat(new[] { MetadataReference.CreateFromFile(typeof(ServiceContractAttribute).Assembly.Location) });
-
-                var compilation = CSharpCompilation.Create(
-                    "generator",
-                    new[] { sourceSyntaxTree },
-                    references,
-                    new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-                var sut = new InterfaceGenerator(compilation);
-                var receiver = new ServiceContractSyntaxReceiver();
-
-                foreach (var node in sourceSyntaxTree.GetRoot().DescendantNodes(descendIntoChildren: _ => true))
-                {
-                    receiver.OnVisitSyntaxNode(node);
-                }
-                var interfaceDeclaration = receiver.Targets.First();
+                var (sut, interfaceDeclaration) = CreateInterfaceGeneratorAndInterfaceDeclarationFromSourceCode(interfaceCodeWithNamespace);
 
                 var actual = sut.Generate(interfaceDeclaration);
 
                 Assert.NotNull(actual);
-                Assert.Equal("IServiceAsync.g.cs", actual.TargetName);
+                Assert.Equal("Test.IServiceAsync.g.cs", actual.TargetName);
                 Assert.Equal(expected, actual.SourceCode);
             }
             [Theory]
-            [MemberData(nameof(Data.FindAttributedServiceContracts), MemberType = typeof(Data))]
-            public void Should_Return_Interface_Name_With_Async(string interfaceCode)
+            [MemberData(nameof(Data.FindAttributedServiceContractsWithName), MemberType = typeof(Data))]
+            [MemberData(nameof(Data.FindAttributedServiceContractsWithoutName), MemberType = typeof(Data))]
+            [MemberData(nameof(Data.FindAttributedServiceContractsWithNameAndSessionMode), MemberType = typeof(Data))]
+            public void Should_Return_Interface_Name_With_Async(string interfaceCode, string expected)
             {
-                var expected = @"public interface IServiceAsync
-{
-}
-";
-                var sourceSyntaxTree = CSharpSyntaxTree.ParseText(interfaceCode);
+                var (sut, interfaceDeclaration) = CreateInterfaceGeneratorAndInterfaceDeclarationFromSourceCode(interfaceCode);
+
+                var actual = sut.Generate(interfaceDeclaration);
+
+                Assert.NotNull(actual);
+                Assert.Equal("IServiceAsync.g.cs", actual.TargetName);
+                Assert.Equal(expected, actual.SourceCode);
+            }
+
+            private (InterfaceGenerator, InterfaceDeclarationSyntax) CreateInterfaceGeneratorAndInterfaceDeclarationFromSourceCode(string sourceCode)
+            {
+                var (compilation, sourceSyntaxTree) = CreateCompilationAndSyntaxTreeFromSourceCode(sourceCode);
+                var receiver = new ServiceContractSyntaxReceiver();
+                foreach (var node in sourceSyntaxTree.GetRoot().DescendantNodes(descendIntoChildren: _ => true))
+                {
+                    receiver.OnVisitSyntaxNode(node);
+                }
+                var interfaceDeclaration = receiver.Targets.First();
+                var interfaceGenerator = new InterfaceGenerator(compilation);
+                return (interfaceGenerator, interfaceDeclaration);
+            }
+            private (Compilation, SyntaxTree) CreateCompilationAndSyntaxTreeFromSourceCode(string sourceCode)
+            {
+                var sourceSyntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
                 var references = AppDomain.CurrentDomain.GetAssemblies()
                     .Where(_ => !_.IsDynamic && !string.IsNullOrWhiteSpace(_.Location))
                     .Select(_ => MetadataReference.CreateFromFile(_.Location))
@@ -73,34 +80,66 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
                     new[] { sourceSyntaxTree },
                     references,
                     new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-                var sut = new InterfaceGenerator(compilation);
-                var receiver = new ServiceContractSyntaxReceiver();
-
-                foreach (var node in sourceSyntaxTree.GetRoot().DescendantNodes(descendIntoChildren: _ => true))
-                {
-                    receiver.OnVisitSyntaxNode(node);
-                }
-                var interfaceDeclaration = receiver.Targets.First();
-
-                var actual = sut.Generate(interfaceDeclaration);
-
-                Assert.NotNull(actual);
-                Assert.Equal("IServiceAsync.g.cs", actual.TargetName);
-                Assert.Equal(expected, actual.SourceCode);
+                return (compilation, sourceSyntaxTree);
             }
+
             public static class Data
             {
-                public static TheoryData<string> FindAttributedServiceContracts { get; } = new()
+                private static readonly string ExpectedFindAttributedServiceContractsWithName = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
+[System.ServiceModel.ServiceContractAttribute(Name = ""TestService"")]
+public interface IServiceAsync
+{
+}
+";
+                private static readonly string ExpectedFindAttributedServiceContractsWithNameAndSessionMode = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
+[System.ServiceModel.ServiceContractAttribute(Name = ""TestService"", SessionMode = (System.ServiceModel.SessionMode)1)]
+public interface IServiceAsync
+{
+}
+";
+                private static readonly string ExpectedFindAttributedServiceContractsWithoutName = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
+[System.ServiceModel.ServiceContractAttribute()]
+public interface IServiceAsync
+{
+}
+";
+
+                public static TheoryData<string, string> FindAttributedServiceContractsWithName { get; } = new()
                 {
-                    { @" [ServiceContract] public interface IService { }" },
-                    { @" [System.ServiceModel.ServiceContract] public interface IService { }" },
-                    { @" [ServiceContractAttribute] public interface IService { }" },
-                    { @" [System.ServiceModel.ServiceContractAttribute] public interface IService { }" },
-                    { @" [ServiceContract(Name = ""TestService"")] public interface IService { }" },
-                    { @" [System.ServiceModel.ServiceContract(Name = ""TestService"")] public interface IService { }" },
-                    { @" [ServiceContractAttribute(Name = ""TestService"")] public interface IService { }" },
-                    { @" [System.ServiceModel.ServiceContractAttribute(Name = ""TestService"")] public interface IService { }" },
+                    { @"using System.ServiceModel;
+[ServiceContract(Name = ""TestService"")]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithName },
+                    { @"[System.ServiceModel.ServiceContract(Name = ""TestService"")]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithName },
+                    { @"using System.ServiceModel;
+[ServiceContractAttribute(Name = ""TestService"")]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithName },
+                    { @"[System.ServiceModel.ServiceContractAttribute(Name = ""TestService"")]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithName }
+                };
+                public static TheoryData<string, string> FindAttributedServiceContractsWithNameAndSessionMode { get; } = new()
+                {
+                    { @"using System.ServiceModel;
+[ServiceContract(Name = ""TestService"", SessionMode = SessionMode.Required)]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
+                    { @"[System.ServiceModel.ServiceContract(Name = ""TestService"", SessionMode = System.ServiceModel.SessionMode.Required)]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
+                    { @"using System.ServiceModel;
+[ServiceContractAttribute(Name = ""TestService"", SessionMode = SessionMode.Required)]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
+                    { @"[System.ServiceModel.ServiceContractAttribute(Name = ""TestService"", SessionMode = System.ServiceModel.SessionMode.Required)]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithNameAndSessionMode }
+                };
+                public static TheoryData<string, string> FindAttributedServiceContractsWithoutName { get; } = new()
+                {
+                    { @"using System.ServiceModel;
+[ServiceContract] public interface IService { }", ExpectedFindAttributedServiceContractsWithoutName },
+                    { @"[System.ServiceModel.ServiceContract]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithoutName },
+                    { @"using System.ServiceModel;
+[ServiceContractAttribute] public interface IService { }", ExpectedFindAttributedServiceContractsWithoutName },
+                    { @"[System.ServiceModel.ServiceContractAttribute]
+public interface IService { }", ExpectedFindAttributedServiceContractsWithoutName }
                 };
             }
         }
