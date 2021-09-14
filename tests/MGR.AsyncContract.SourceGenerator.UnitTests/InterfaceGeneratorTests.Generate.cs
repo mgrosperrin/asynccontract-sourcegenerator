@@ -85,61 +85,75 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
 
             public static class Data
             {
+                private const string InterfaceDeclaration = @"public interface IService
+{
+}";
+                private const string AsyncInterfaceDeclaration = @"public interface IServiceAsync
+{
+}";
                 private static readonly string ExpectedFindAttributedServiceContractsWithName = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
 [System.ServiceModel.ServiceContractAttribute(Name = ""TestService"")]
-public interface IServiceAsync
-{
-}
+" + AsyncInterfaceDeclaration + @"
 ";
                 private static readonly string ExpectedFindAttributedServiceContractsWithNameAndSessionMode = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
 [System.ServiceModel.ServiceContractAttribute(Name = ""TestService"", SessionMode = (System.ServiceModel.SessionMode)1)]
-public interface IServiceAsync
-{
-}
+" + AsyncInterfaceDeclaration + @"
 ";
                 private static readonly string ExpectedFindAttributedServiceContractsWithoutName = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
 [System.ServiceModel.ServiceContractAttribute()]
-public interface IServiceAsync
-{
-}
+" + AsyncInterfaceDeclaration + @"
 ";
 
                 public static TheoryData<string, string> FindAttributedServiceContractsWithName { get; } = new()
                 {
                     { @"using System.ServiceModel;
 [ServiceContract(Name = ""TestService"")]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithName },
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithName },
                     { @"[System.ServiceModel.ServiceContract(Name = ""TestService"")]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithName },
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithName },
                     { @"using System.ServiceModel;
 [ServiceContractAttribute(Name = ""TestService"")]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithName },
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithName },
                     { @"[System.ServiceModel.ServiceContractAttribute(Name = ""TestService"")]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithName }
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithName }
                 };
                 public static TheoryData<string, string> FindAttributedServiceContractsWithNameAndSessionMode { get; } = new()
                 {
                     { @"using System.ServiceModel;
 [ServiceContract(Name = ""TestService"", SessionMode = SessionMode.Required)]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
                     { @"[System.ServiceModel.ServiceContract(Name = ""TestService"", SessionMode = System.ServiceModel.SessionMode.Required)]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
                     { @"using System.ServiceModel;
-[ServiceContractAttribute(Name = ""TestService"", SessionMode = SessionMode.Required)]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
-                    { @"[System.ServiceModel.ServiceContractAttribute(Name = ""TestService"", SessionMode = System.ServiceModel.SessionMode.Required)]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithNameAndSessionMode }
+[ServiceContractAttribute(Name = ""TestService"", SessionMode = (SessionMode)1)]
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithNameAndSessionMode },
+                    { @"[System.ServiceModel.ServiceContractAttribute(Name = ""TestService"", SessionMode = (System.ServiceModel.SessionMode)1)]
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithNameAndSessionMode }
                 };
                 public static TheoryData<string, string> FindAttributedServiceContractsWithoutName { get; } = new()
                 {
                     { @"using System.ServiceModel;
-[ServiceContract] public interface IService { }", ExpectedFindAttributedServiceContractsWithoutName },
+[ServiceContract]
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithoutName },
                     { @"[System.ServiceModel.ServiceContract]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithoutName },
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithoutName },
                     { @"using System.ServiceModel;
-[ServiceContractAttribute] public interface IService { }", ExpectedFindAttributedServiceContractsWithoutName },
+[ServiceContractAttribute]
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithoutName },
                     { @"[System.ServiceModel.ServiceContractAttribute]
-public interface IService { }", ExpectedFindAttributedServiceContractsWithoutName }
+" + InterfaceDeclaration + @"
+", ExpectedFindAttributedServiceContractsWithoutName }
                 };
             }
         }
