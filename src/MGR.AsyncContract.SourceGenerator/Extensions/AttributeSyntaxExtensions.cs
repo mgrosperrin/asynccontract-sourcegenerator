@@ -12,5 +12,13 @@ namespace Microsoft.CodeAnalysis.CSharp.Syntax
                 || attributeName == Constants.FullyQualifiedServiceContractAttribute
                 || attributeName == Constants.ServiceContractAttribute;
         }
+        public static bool IsOperationContract(this AttributeSyntax attributeSyntax)
+        {
+            var attributeName = attributeSyntax.Name.ToString();
+            return attributeName == Constants.OperationContract
+                || attributeName == Constants.FullyQualifiedOperationContract
+                || attributeName == Constants.FullyQualifiedOperationContractAttribute
+                || attributeName == Constants.OperationContractAttribute;
+        }
     }
 }

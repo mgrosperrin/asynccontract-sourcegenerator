@@ -91,15 +91,15 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
                 private const string AsyncInterfaceDeclaration = @"public interface IServiceAsync
 {
 }";
-                private static readonly string ExpectedFindAttributedServiceContractsWithName = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
+                private static readonly string ExpectedFindAttributedServiceContractsWithName = @"[System.CodeDom.Compiler.GeneratedCode(""" + nameof(AsyncContractSourceGenerator) + @""", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
 [System.ServiceModel.ServiceContractAttribute(Name = ""TestService"")]
 " + AsyncInterfaceDeclaration + @"
 ";
-                private static readonly string ExpectedFindAttributedServiceContractsWithNameAndSessionMode = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
+                private static readonly string ExpectedFindAttributedServiceContractsWithNameAndSessionMode = @"[System.CodeDom.Compiler.GeneratedCode(""" + nameof(AsyncContractSourceGenerator) + @""", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
 [System.ServiceModel.ServiceContractAttribute(Name = ""TestService"", SessionMode = (System.ServiceModel.SessionMode)1)]
 " + AsyncInterfaceDeclaration + @"
 ";
-                private static readonly string ExpectedFindAttributedServiceContractsWithoutName = @"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
+                private static readonly string ExpectedFindAttributedServiceContractsWithoutName = @"[System.CodeDom.Compiler.GeneratedCode(""" + nameof(AsyncContractSourceGenerator) + @""", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
 [System.ServiceModel.ServiceContractAttribute()]
 " + AsyncInterfaceDeclaration + @"
 ";
