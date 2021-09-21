@@ -53,7 +53,7 @@ namespace MGR.AsyncContract.SourceGenerator
             sourceCodeBuilder.AppendLine($@"[System.CodeDom.Compiler.GeneratedCode(""AsyncContractSourceGenerator"", ""{ typeof(AsyncContractSourceGenerator).Assembly.GetName().Version }"")]");
             foreach (var attributeData in interfaceAttributes)
             {
-                sourceCodeBuilder.AppendLine(_attributeGenerator.GenerateInterfaceAttribute(attributeData));
+                sourceCodeBuilder.AppendLine(_attributeGenerator.GenerateAttribute(attributeData));
             }
         }
 

@@ -14,16 +14,16 @@ namespace MGR.AsyncContract.SourceGenerator
             _operationContractSymbol = compilation.GetTypeByMetadataName(Constants.FullyQualifiedOperationContractAttribute)
     ?? throw new InvalidOperationException("Unable to find the attribute System.ServiceModel.OperationContractAttribute");
         }
-        public string GenerateInterfaceAttribute(AttributeData attributeData) => Generate(attributeData, NoOp);
+        public string GenerateAttribute(AttributeData attributeData) => Generate(attributeData, NoOp);
 
-        public string GenerateMethodAttribute(AttributeData attributeData, ServiceContractInformation serviceContractInformation, string methodName)
+        public string GenerateOperationContractAttribute(AttributeData attributeData, ServiceContractInformation serviceContractInformation, string methodName)
         {
             var attributeClass = attributeData.AttributeClass;
             if (attributeClass is null)
             {
                 return string.Empty;
             }
-            Func<ImmutableArray<KeyValuePair<string, TypedConstant>>, IEnumerable<KeyValuePair<string, string>>> transformOperation = _operationContractSymbol.Equals(attributeData.AttributeClass, SymbolEqualityComparer.Default) ? arguments => TransformNamedAttributes(arguments, serviceContractInformation, methodName) : NoOp;
+            Func<ImmutableArray<KeyValuePair<string, TypedConstant>>, IEnumerable<KeyValuePair<string, string>>> transformOperation = IsOperationContractAttribute(attributeData) ? arguments => TransformNamedAttributes(arguments, serviceContractInformation, methodName) : NoOp;
 
             return Generate(attributeData, transformOperation);
         }
@@ -61,5 +61,6 @@ namespace MGR.AsyncContract.SourceGenerator
                 yield return new KeyValuePair<string, string>("Action", $@"""{serviceContractInformation.RootNamespace}/{serviceContractInformation.ServiceName}/{methodName}""");
             }
         }
+        public bool IsOperationContractAttribute(AttributeData attribute) => _operationContractSymbol.Equals(attribute.AttributeClass, SymbolEqualityComparer.Default);
     }
 }

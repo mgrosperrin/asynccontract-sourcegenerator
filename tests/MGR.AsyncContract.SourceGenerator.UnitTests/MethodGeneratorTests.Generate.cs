@@ -31,7 +31,64 @@ public interface ITest
                 Assert.Equal(expected, actual);
             }
             [Fact]
-            public void Should_Generate_Method_With_OperationContract()
+            public void Should_Generate_Method_With_OperationContract_And_Void_NoParameter()
+            {
+                var interfaceCode = $@"using System.ServiceModel;
+[ServiceContract]
+public interface ITest
+{{
+    [OperationContract()]
+    void { MethodName }();
+}}
+";
+                var expected = $@"[System.ServiceModel.OperationContractAttribute(Action = ""http://tempuri.org/ITest/{ MethodName }"")]
+System.Threading.Tasks.Task { MethodName }Async();";
+                var (sut, semanticModel, methodDeclaration) = CreateMethodGeneratorAndMethodDeclarationFromSourceCode(interfaceCode);
+
+                var actual = sut.Generate(semanticModel, methodDeclaration, new ServiceContractInformation("http://tempuri.org", "ITest"));
+
+                Assert.Equal(expected, actual);
+            }
+            [Fact]
+            public void Should_Generate_Method_With_OperationContract_And_Void_Parameter()
+            {
+                var interfaceCode = $@"using System.ServiceModel;
+[ServiceContract]
+public interface ITest
+{{
+    [OperationContract()]
+    void { MethodName }(int param1);
+}}
+";
+                var expected = $@"[System.ServiceModel.OperationContractAttribute(Action = ""http://tempuri.org/ITest/{ MethodName }"")]
+System.Threading.Tasks.Task { MethodName }Async(int param1);";
+                var (sut, semanticModel, methodDeclaration) = CreateMethodGeneratorAndMethodDeclarationFromSourceCode(interfaceCode);
+
+                var actual = sut.Generate(semanticModel, methodDeclaration, new ServiceContractInformation("http://tempuri.org", "ITest"));
+
+                Assert.Equal(expected, actual);
+            }
+            [Fact]
+            public void Should_Generate_Method_With_OperationContract_And_Void_Multiple_Parameters()
+            {
+                var interfaceCode = $@"using System.ServiceModel;
+[ServiceContract]
+public interface ITest
+{{
+    [OperationContract()]
+    void { MethodName }(int param1, List<string> param2);
+}}
+";
+                var expected = $@"[System.ServiceModel.OperationContractAttribute(Action = ""http://tempuri.org/ITest/{ MethodName }"")]
+System.Threading.Tasks.Task { MethodName }Async(int param1, List<string> param2);";
+                var (sut, semanticModel, methodDeclaration) = CreateMethodGeneratorAndMethodDeclarationFromSourceCode(interfaceCode);
+
+                var actual = sut.Generate(semanticModel, methodDeclaration, new ServiceContractInformation("http://tempuri.org", "ITest"));
+
+                Assert.Equal(expected, actual);
+            }
+            [Fact]
+            public void Should_Generate_Method_With_OperationContract_And_ReturnType_NoParameter()
             {
                 var interfaceCode = $@"using System.ServiceModel;
 [ServiceContract]
@@ -42,8 +99,45 @@ public interface ITest
 }}
 ";
                 var expected = $@"[System.ServiceModel.OperationContractAttribute(Action = ""http://tempuri.org/ITest/{ MethodName }"")]
-                System.Threading.Tasks.Task<int> { MethodName }Async();}}
+System.Threading.Tasks.Task<int> { MethodName }Async();";
+                var (sut, semanticModel, methodDeclaration) = CreateMethodGeneratorAndMethodDeclarationFromSourceCode(interfaceCode);
+
+                var actual = sut.Generate(semanticModel, methodDeclaration, new ServiceContractInformation("http://tempuri.org", "ITest"));
+
+                Assert.Equal(expected, actual);
+            }
+            [Fact]
+            public void Should_Generate_Method_With_OperationContract_And_ReturnType_Parameter()
+            {
+                var interfaceCode = $@"using System.ServiceModel;
+[ServiceContract]
+public interface ITest
+{{
+    [OperationContract()]
+    int { MethodName }(int param1);
+}}
 ";
+                var expected = $@"[System.ServiceModel.OperationContractAttribute(Action = ""http://tempuri.org/ITest/{ MethodName }"")]
+System.Threading.Tasks.Task<int> { MethodName }Async(int param1);";
+                var (sut, semanticModel, methodDeclaration) = CreateMethodGeneratorAndMethodDeclarationFromSourceCode(interfaceCode);
+
+                var actual = sut.Generate(semanticModel, methodDeclaration, new ServiceContractInformation("http://tempuri.org", "ITest"));
+
+                Assert.Equal(expected, actual);
+            }
+            [Fact]
+            public void Should_Generate_Method_With_OperationContract_And_ReturnType_Multiple_Parameters()
+            {
+                var interfaceCode = $@"using System.ServiceModel;
+[ServiceContract]
+public interface ITest
+{{
+    [OperationContract()]
+    int { MethodName }(int param1, List<string> param2);
+}}
+";
+                var expected = $@"[System.ServiceModel.OperationContractAttribute(Action = ""http://tempuri.org/ITest/{ MethodName }"")]
+System.Threading.Tasks.Task<int> { MethodName }Async(int param1, List<string> param2);";
                 var (sut, semanticModel, methodDeclaration) = CreateMethodGeneratorAndMethodDeclarationFromSourceCode(interfaceCode);
 
                 var actual = sut.Generate(semanticModel, methodDeclaration, new ServiceContractInformation("http://tempuri.org", "ITest"));

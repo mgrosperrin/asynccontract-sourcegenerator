@@ -6,6 +6,7 @@ namespace MGR.AsyncContract.SourceGenerator
 {
     internal class CodeBuilder
     {
+        private static string[] NewLineSeparators = new[] { Environment.NewLine };
         private readonly StringBuilder _codeBuilder = new();
         private int _currentIndentation = 0;
 
@@ -21,7 +22,7 @@ namespace MGR.AsyncContract.SourceGenerator
         }
         public IDisposable StartNamespace(INamespaceSymbol namespaceSymbol)
         {
-            if(namespaceSymbol.IsGlobalNamespace)
+            if (namespaceSymbol.IsGlobalNamespace)
             {
                 return EmptyDisposable.Instance;
             }
@@ -37,13 +38,20 @@ namespace MGR.AsyncContract.SourceGenerator
         }
         public CodeBuilder AppendLine(string line)
         {
+            if (string.IsNullOrWhiteSpace(line))
+            {
+                return this;
+            }
             var indentation = string.Empty;
             if (_currentIndentation > 0)
             {
                 indentation = new string(' ', _currentIndentation * 4);
             }
-            _codeBuilder.Append(indentation)
-                .AppendLine(line);
+            foreach (var singleLine in line.Split(NewLineSeparators, StringSplitOptions.None))
+            {
+                _codeBuilder.Append(indentation)
+                    .AppendLine(singleLine);
+            }
             return this;
         }
 
