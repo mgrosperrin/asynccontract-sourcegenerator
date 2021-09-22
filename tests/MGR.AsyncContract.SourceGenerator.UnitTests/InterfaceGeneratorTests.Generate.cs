@@ -54,12 +54,58 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
                 Assert.Equal("IServiceAsync.g.cs", actual.TargetName);
                 Assert.Equal(expected, actual.SourceCode);
             }
-
-            private (InterfaceGenerator, InterfaceDeclarationSyntax) CreateInterfaceGeneratorAndInterfaceDeclarationFromSourceCode(string sourceCode)
+            [Fact]
+            public void Generally_Works()
             {
-                var (compilation, sourceSyntaxTree) = CreateCompilationAndSyntaxTreeFromSourceCode(sourceCode);
+                var userClass = @"using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+
+namespace MGR.Application.Domain
+{
+    [DataContract]
+    public class Entity
+    {
+        [DataMember]
+        public int Id { get; set; };
+    }
+}
+";
+                var contract = @"using MGR.Application.Domain;
+using System.ServiceModel;
+
+namespace MGR.Application.Contracts
+{
+    [ServiceContract(Name = ""MGR.Service"", Namespace = ""http://application.mgr.org"", SessionMode = SessionMode.Required)]
+    public interface IEntityServiceContrat
+            {
+                [OperationContract()]
+                Entity GetEntity(int id);
+            }
+        }";
+                var (sut, interfaceDeclaration) = CreateInterfaceGeneratorAndInterfaceDeclarationFromSourceCode(userClass, contract);
+
+                var actual = sut.Generate(interfaceDeclaration);
+
+                Assert.NotNull(actual);
+                Assert.Equal("MGR.Application.Contracts.IEntityServiceContratAsync.g.cs", actual.TargetName);
+                Assert.Equal(@"namespace MGR.Application.Contracts
+{
+    [System.CodeDom.Compiler.GeneratedCode(""" + nameof(AsyncContractSourceGenerator) + @""", """ + typeof(AsyncContractSourceGenerator).Assembly.GetName().Version + @""")]
+    [System.ServiceModel.ServiceContractAttribute(Name = ""MGR.Service"", Namespace = ""http://application.mgr.org"", SessionMode = (System.ServiceModel.SessionMode)1)]
+    public interface IEntityServiceContratAsync
+    {
+        [System.ServiceModel.OperationContractAttribute(Action = ""http://application.mgr.org/MGR.Service/GetEntity"")]
+        System.Threading.Tasks.Task<MGR.Application.Domain.Entity> GetEntityAsync(int id);
+    }
+}
+", actual.SourceCode);
+            }
+            private (InterfaceGenerator, InterfaceDeclarationSyntax) CreateInterfaceGeneratorAndInterfaceDeclarationFromSourceCode(params string[] sourceCodeFiles)
+            {
+                var compilation = CreateCompilationFromSourceCode(sourceCodeFiles);
                 var receiver = new ServiceContractSyntaxReceiver();
-                foreach (var node in sourceSyntaxTree.GetRoot().DescendantNodes(descendIntoChildren: _ => true))
+                foreach (var node in compilation.SyntaxTrees.SelectMany(syntaxTree => syntaxTree.GetRoot().DescendantNodes(descendIntoChildren: _ => true)))
                 {
                     receiver.OnVisitSyntaxNode(node);
                 }
@@ -67,9 +113,9 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
                 var interfaceGenerator = new InterfaceGenerator(compilation);
                 return (interfaceGenerator, interfaceDeclaration);
             }
-            private (Compilation, SyntaxTree) CreateCompilationAndSyntaxTreeFromSourceCode(string sourceCode)
+            private Compilation CreateCompilationFromSourceCode(params string[] sourceCodeFiles)
             {
-                var sourceSyntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
+                var sourceSyntaxTrees = sourceCodeFiles.Select(sourceCode => CSharpSyntaxTree.ParseText(sourceCode));
                 var references = AppDomain.CurrentDomain.GetAssemblies()
                     .Where(_ => !_.IsDynamic && !string.IsNullOrWhiteSpace(_.Location))
                     .Select(_ => MetadataReference.CreateFromFile(_.Location))
@@ -77,10 +123,10 @@ namespace MGR.AsyncContract.SourceGenerator.UnitTests
 
                 var compilation = CSharpCompilation.Create(
                     "generator",
-                    new[] { sourceSyntaxTree },
+                    sourceSyntaxTrees,
                     references,
                     new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-                return (compilation, sourceSyntaxTree);
+                return compilation;
             }
 
             public static class Data

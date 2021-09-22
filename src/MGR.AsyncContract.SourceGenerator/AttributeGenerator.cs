@@ -58,7 +58,7 @@ namespace MGR.AsyncContract.SourceGenerator
             }
             if (addActionArgument)
             {
-                yield return new KeyValuePair<string, string>("Action", $@"""{serviceContractInformation.RootNamespace}/{serviceContractInformation.ServiceName}/{methodName}""");
+                yield return new KeyValuePair<string, string>("Action", $@"""{serviceContractInformation.GenerateActionValueForMethod(methodName)}""");
             }
         }
         public bool IsOperationContractAttribute(AttributeData attribute) => _operationContractSymbol.Equals(attribute.AttributeClass, SymbolEqualityComparer.Default);

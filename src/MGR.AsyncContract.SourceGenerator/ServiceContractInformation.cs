@@ -13,6 +13,8 @@ namespace MGR.AsyncContract.SourceGenerator
         public string RootNamespace { get; }
         public string ServiceName { get; }
 
+        public string GenerateActionValueForMethod(string methodName) => $@"{RootNamespace}/{ServiceName}/{methodName}";
+
         public static ServiceContractInformation Parse(AttributeData serviceContractAttribute, string interfaceName)
         {
             string rootNamespace = "http://tempuri.org";
@@ -21,11 +23,11 @@ namespace MGR.AsyncContract.SourceGenerator
             {
                 if (argument.Key == "Namespace")
                 {
-                    rootNamespace = argument.Value.GetValue();
+                    rootNamespace = argument.Value.GetValue().Trim('"');
                 }
                 if (argument.Key == "Name")
                 {
-                    serviceName = argument.Value.GetValue();
+                    serviceName = argument.Value.GetValue().Trim('"');
                 }
             }
             return new ServiceContractInformation(rootNamespace, serviceName);

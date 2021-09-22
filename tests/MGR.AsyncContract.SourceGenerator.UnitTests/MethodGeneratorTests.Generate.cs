@@ -72,6 +72,7 @@ System.Threading.Tasks.Task { MethodName }Async(int param1);";
             public void Should_Generate_Method_With_OperationContract_And_Void_Multiple_Parameters()
             {
                 var interfaceCode = $@"using System.ServiceModel;
+using System.Collections.Generic;
 [ServiceContract]
 public interface ITest
 {{
@@ -80,7 +81,7 @@ public interface ITest
 }}
 ";
                 var expected = $@"[System.ServiceModel.OperationContractAttribute(Action = ""http://tempuri.org/ITest/{ MethodName }"")]
-System.Threading.Tasks.Task { MethodName }Async(int param1, List<string> param2);";
+System.Threading.Tasks.Task { MethodName }Async(int param1, System.Collections.Generic.List<string> param2);";
                 var (sut, semanticModel, methodDeclaration) = CreateMethodGeneratorAndMethodDeclarationFromSourceCode(interfaceCode);
 
                 var actual = sut.Generate(semanticModel, methodDeclaration, new ServiceContractInformation("http://tempuri.org", "ITest"));
@@ -129,15 +130,17 @@ System.Threading.Tasks.Task<int> { MethodName }Async(int param1);";
             public void Should_Generate_Method_With_OperationContract_And_ReturnType_Multiple_Parameters()
             {
                 var interfaceCode = $@"using System.ServiceModel;
+using System.Collections.Generic
+using System.IO;
 [ServiceContract]
 public interface ITest
 {{
     [OperationContract()]
-    int { MethodName }(int param1, List<string> param2);
+    int { MethodName }(int param1, List<Stream> param2);
 }}
 ";
                 var expected = $@"[System.ServiceModel.OperationContractAttribute(Action = ""http://tempuri.org/ITest/{ MethodName }"")]
-System.Threading.Tasks.Task<int> { MethodName }Async(int param1, List<string> param2);";
+System.Threading.Tasks.Task<int> { MethodName }Async(int param1, System.Collections.Generic.List<System.IO.Stream> param2);";
                 var (sut, semanticModel, methodDeclaration) = CreateMethodGeneratorAndMethodDeclarationFromSourceCode(interfaceCode);
 
                 var actual = sut.Generate(semanticModel, methodDeclaration, new ServiceContractInformation("http://tempuri.org", "ITest"));
